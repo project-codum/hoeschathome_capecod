@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/main.astro';
+import HomePage from '../components/HomePage.astro';
+import NavBar from '../components/NavBar.astro';
+import { defaultLocale, getStrings, locales, type Locale } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getHomeSections } from '../components/sections/homeSections';
+import { getNavLinks } from '../lib/navigation';
+
+interface Props {
+  currentLocale?: Locale;
+}
+
+const { currentLocale: currentLocaleProp } = Astro.props;
+const currentLocale = (currentLocaleProp ?? Astro.currentLocale ?? defaultLocale) as Locale;
+const basePath =
+  import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+const normalizedPathname =
+  basePath && Astro.url.pathname.startsWith(basePath)
+    ? Astro.url.pathname.slice(basePath.length) || '/'
+    : Astro.url.pathname;
+const localePattern = new RegExp(`^/(${locales.join('|')})(?=/|$)`);
+const pathWithoutLocale = normalizedPathname.replace(localePattern, '') || '/';
+const pathParam = pathWithoutLocale === '/' ? undefined : pathWithoutLocale.replace(/^\/+/, '');
+const alternateLocale: Locale = currentLocale === 'de' ? 'en' : 'de';
+const alternateLocaleHref = getRelativeLocaleUrl(alternateLocale, pathParam);
+const content = getStrings(currentLocale).home;
+const homeHref = getRelativeLocaleUrl(currentLocale);
+const galleryHref = getRelativeLocaleUrl(currentLocale, 'galerie');
+const sections = getHomeSections(content);
+const sectionLinks = getNavLinks(sections, homeHref);
+const links = [{ label: content.sectionGalleryLabel, href: galleryHref }, ...sectionLinks];
+---
+
+<Layout
+  content={{
+    title: content.metaTitle,
+    description: content.metaDescription,
+  }}
+  currentLocale={currentLocale}
+>
+  <NavBar
+    links={links}
+    homeHref={homeHref}
+    alternateLocaleHref={alternateLocaleHref}
+    languageToggleLabel={content.navLanguageToggleLabel}
+    languageToggleAria={content.navLanguageToggleAria}
+  />
+  <section class="bg-[var(--color-shell)] text-[var(--color-ink)]">
+    <main>
+      <HomePage content={content} currentLocale={currentLocale} />
+    </main>
+  </section>
+</Layout>

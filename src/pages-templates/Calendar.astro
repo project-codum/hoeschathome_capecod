@@ -1,0 +1,90 @@
+---
+import chickButton from '../assets/decorative-elements/chick-button.png';
+import chickButtonHovered from '../assets/decorative-elements/chick-button-hovered.png';
+import Layout from '../layouts/main.astro';
+import NavBar from '../components/NavBar.astro';
+import { defaultLocale, getStrings, locales, type Locale } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getHomeSections } from '../components/sections/homeSections';
+import { getNavLinks } from '../lib/navigation';
+
+interface Props {
+  currentLocale?: Locale;
+}
+
+const { currentLocale: currentLocaleProp } = Astro.props;
+const currentLocale = (currentLocaleProp ?? Astro.currentLocale ?? defaultLocale) as Locale;
+const basePath =
+  import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+const normalizedPathname =
+  basePath && Astro.url.pathname.startsWith(basePath)
+    ? Astro.url.pathname.slice(basePath.length) || '/'
+    : Astro.url.pathname;
+const localePattern = new RegExp(`^/(${locales.join('|')})(?=/|$)`);
+const pathWithoutLocale = normalizedPathname.replace(localePattern, '') || '/';
+const pathParam = pathWithoutLocale === '/' ? undefined : pathWithoutLocale.replace(/^\/+/, '');
+const alternateLocale: Locale = currentLocale === 'de' ? 'en' : 'de';
+const alternateLocaleHref = getRelativeLocaleUrl(alternateLocale, pathParam);
+const homeContent = getStrings(currentLocale).home;
+const calendarContent = getStrings(currentLocale).calendar;
+const homeHref = getRelativeLocaleUrl(currentLocale);
+const galleryHref = getRelativeLocaleUrl(currentLocale, 'galerie');
+const sections = getHomeSections(homeContent);
+const sectionLinks = getNavLinks(sections, homeHref);
+const links = [{ label: homeContent.sectionGalleryLabel, href: galleryHref }, ...sectionLinks];
+const bookingHref =
+  (import.meta.env.PUBLIC_BOOKING_URL as string | undefined) ?? '#add-booking-link';
+---
+
+<Layout
+  content={{
+    title: calendarContent.metaTitle,
+    description: calendarContent.metaDescription,
+  }}
+  currentLocale={currentLocale}
+>
+  <NavBar
+    links={links}
+    homeHref={homeHref}
+    alternateLocaleHref={alternateLocaleHref}
+    languageToggleLabel={homeContent.navLanguageToggleLabel}
+    languageToggleAria={homeContent.navLanguageToggleAria}
+  />
+  <section class="min-h-screen bg-[var(--color-shell)]">
+    <div class="container-responsive space-y-8 py-16 lg:py-24">
+      <p class="section-eyebrow">{calendarContent.eyebrow}</p>
+      <div
+        class="max-w-3xl space-y-5 rounded-3xl border border-[var(--color-border)] bg-white/80 p-6 shadow-sm lg:p-10"
+      >
+        <h1 class="section-title">{calendarContent.heading}</h1>
+        <p class="section-body">{calendarContent.body}</p>
+        <a
+          href={bookingHref}
+          class="chick-image-button"
+          aria-label={calendarContent.primaryCtaLabel}
+        >
+          <img
+            src={chickButton.src}
+            width={chickButton.width}
+            height={chickButton.height}
+            alt=""
+            class="chick-image-button__image chick-image-button__image--default"
+            loading="eager"
+          />
+          <img
+            src={chickButtonHovered.src}
+            width={chickButtonHovered.width}
+            height={chickButtonHovered.height}
+            alt=""
+            class="chick-image-button__image chick-image-button__image--hover"
+            loading="eager"
+          />
+          <span class="sr-only">{calendarContent.primaryCtaLabel}</span>
+        </a>
+        <p class="text-sm font-semibold text-[var(--color-ink-muted)]">
+          {calendarContent.placeholderNote}
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

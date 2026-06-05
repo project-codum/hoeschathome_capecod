@@ -1,0 +1,67 @@
+---
+import chickButton from '../../assets/decorative-elements/chick-button.png';
+import chickButtonHovered from '../../assets/decorative-elements/chick-button-hovered.png';
+import SliderCarousel from '../SliderCarousel';
+import type { HomeContent, Locale } from '../../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getPhotoAlt } from '../../lib/photoAlt';
+
+interface Props {
+  id?: string;
+  currentLocale: Locale;
+  content: HomeContent;
+}
+
+const { id = 'section-slider', currentLocale, content } = Astro.props;
+const galleryHref = getRelativeLocaleUrl(currentLocale, 'galerie');
+const photoEntries = Object.entries(
+  import.meta.glob('../../assets/photos/*.{avif,jpg,jpeg,png,webp}', { eager: true })
+);
+type ImageModule = { src: string; width: number; height: number };
+const photos = photoEntries
+  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
+  .map(([path, module]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resolved = ((module as any)?.default ?? module) as ImageModule;
+    return {
+      image: resolved,
+      alt: getPhotoAlt(path, currentLocale, content.galleryImageAltPrefix),
+    };
+  });
+---
+
+<figure id={id} class="decorative-block decorative-block--tall relative">
+  <SliderCarousel
+    client:load
+    className="h-full"
+    slides={photos.map((photo) => ({
+      src: photo.image.src,
+      width: photo.image.width,
+      height: photo.image.height,
+      alt: photo.alt,
+    }))}
+  />
+  <a
+    class="chick-image-button chick-image-button--slider"
+    href={galleryHref}
+    aria-label={content.sliderGalleryAriaLabel}
+  >
+    <img
+      src={chickButton.src}
+      width={chickButton.width}
+      height={chickButton.height}
+      alt=""
+      class="chick-image-button__image chick-image-button__image--default"
+      loading="lazy"
+    />
+    <img
+      src={chickButtonHovered.src}
+      width={chickButtonHovered.width}
+      height={chickButtonHovered.height}
+      alt=""
+      class="chick-image-button__image chick-image-button__image--hover"
+      loading="lazy"
+    />
+    <span class="sr-only">{content.sliderGalleryLabel}</span>
+  </a>
+</figure>

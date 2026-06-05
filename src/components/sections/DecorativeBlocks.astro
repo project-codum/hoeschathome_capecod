@@ -1,0 +1,106 @@
+---
+import type { HomeContent, Locale } from '../../i18n';
+import waterfrontDeck from '../../assets/photos/11-waterfront-deck-umbrellas.jpeg';
+import harborSunset from '../../assets/photos/22-harbor-sunset-dock.jpeg';
+import decorativeLine from '../../assets/decorative-elements/decorative-line.png';
+import SliderSection from './SliderSection.astro';
+
+interface Props {
+  content: HomeContent;
+  currentLocale: Locale;
+}
+
+const { content, currentLocale } = Astro.props;
+const headingId = 'amenities-heading';
+---
+
+<section
+  id="amenities"
+  class="decorative-blocks relative z-0"
+  aria-labelledby={headingId}
+>
+  <SliderSection currentLocale={currentLocale} content={content} />
+  <div
+    id="section-amenities"
+    class="decorative-block decorative-block--solid decorative-block--short relative"
+    style="--decor-color: var(--color-ocean);"
+  >
+    <div class="relative z-10">
+      <div class="container-responsive py-16 lg:py-24">
+        <div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div class="space-y-5">
+            <p class="section-eyebrow text-[var(--color-shell)]">{content.sectionAmenitiesLabel}</p>
+            <h2 id={headingId} class="section-title text-[var(--color-shell)]">{content.sectionAmenitiesHeading}</h2>
+            <p class="section-body text-[var(--color-shell)]">{content.sectionAmenitiesBody}</p>
+            <ul class="grid gap-3 text-base text-[var(--color-shell)] sm:grid-cols-2">
+              {content.sectionAmenitiesList.map((item) => (
+                <li class="inline-flex items-center gap-2">
+                  <span class="amenities-dot bg-current" aria-hidden="true"></span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div class="lg:justify-self-end lg:max-w-xl">
+            <figure class="image-overlay ml-auto w-[96%] overflow-hidden rounded-3xl bg-white/10 p-3 shadow-xl">
+              <img
+                src={waterfrontDeck.src}
+                width={waterfrontDeck.width}
+                height={waterfrontDeck.height}
+                alt={content.sectionAmenitiesPianoAlt}
+                loading="lazy"
+                class="h-full w-full rounded-2xl object-cover"
+              />
+            </figure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    id="section-environment"
+    class="decorative-block decorative-block--solid decorative-block--short decorative-block--light decorative-block--line"
+    style={`--decor-color: var(--color-sand); --decor-line: url(${decorativeLine.src});`}
+  >
+    <div class="relative z-10">
+      <div class="container-responsive py-16 lg:py-24">
+        <div class="space-y-5">
+          <p class="section-eyebrow">{content.sectionEnvironmentLabel}</p>
+          <h2 class="section-title">{content.sectionEnvironmentHeading}</h2>
+          <p class="section-body">{content.sectionEnvironmentBody}</p>
+          <ul class="grid gap-2 text-sm sm:grid-cols-2 sm:text-base">
+            {content.sectionEnvironmentHighlights.map((item) => (
+              <li class="flex items-start gap-2">
+                <span class="amenities-dot mt-2 shrink-0 bg-current" aria-hidden="true"></span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    id="section-philosophy"
+    class="decorative-block decorative-block--photo decorative-block--short"
+    style={`--decor-image: url(${harborSunset.src}); --decor-overlay: rgba(45, 78, 91, 0.76);`}
+  >
+    <div class="relative z-10">
+      <div class="container-responsive py-16 lg:py-24">
+        <div class="space-y-5">
+          <p class="section-eyebrow text-[var(--color-shell)]">{content.sectionPhilosophyLabel}</p>
+          <h2 class="section-title text-[var(--color-shell)]">{content.sectionPhilosophyHeading}</h2>
+          <p class="section-body text-[var(--color-shell)]">{content.sectionPhilosophyBody}</p>
+          <ul class="grid gap-2 text-sm sm:grid-cols-2 sm:text-base">
+            {content.sectionPhilosophyHighlights.map((item) => (
+              <li class="flex items-start gap-2">
+                <span class="amenities-dot mt-2 shrink-0 bg-current" aria-hidden="true"></span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

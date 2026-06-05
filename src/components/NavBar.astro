@@ -1,0 +1,59 @@
+---
+import logo from '../assets/logo.png';
+
+interface Props {
+  links: { label: string; href: string }[];
+  homeHref: string;
+  alternateLocaleHref: string;
+  languageToggleLabel: string;
+  languageToggleAria: string;
+}
+
+const {
+  links,
+  homeHref,
+  alternateLocaleHref,
+  languageToggleLabel,
+  languageToggleAria,
+} = Astro.props;
+---
+
+<nav
+  class="sticky top-0 z-50 flex items-center justify-between border-b border-[var(--color-border)] bg-[rgba(255,253,248,0.92)] p-4 shadow-none backdrop-blur"
+>
+  <a href={homeHref} class="inline-flex items-center text-[var(--color-ink)]">
+    <img
+      src={logo.src}
+      width={logo.width}
+      height={logo.height}
+      alt="Cape Cod Beach House logo"
+      class="h-16 w-auto sm:h-20"
+      loading="eager"
+    />
+    <span class="sr-only">Cape Cod Beach House</span>
+  </a>
+  <div class="flex items-center gap-4">
+    <ul class="flex gap-4">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="text-[var(--color-ink-muted)] transition hover:text-[var(--color-lobster)]"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <a
+      href={alternateLocaleHref}
+      class="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition-colors hover:border-[var(--color-lobster)] hover:text-[var(--color-lobster)] focus:outline-none focus-visible:ring focus-visible:ring-[var(--color-lobster)] focus-visible:ring-offset-2"
+      aria-label={languageToggleAria}
+      data-lang-toggle
+    >
+      {languageToggleLabel}
+    </a>
+  </div>
+</nav>

@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/main.astro';
+import NavBar from '../components/NavBar.astro';
+import { defaultLocale, getStrings, locales, type Locale } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getHomeSections } from '../components/sections/homeSections';
+import { getNavLinks } from '../lib/navigation';
+import { getPhotoAlt } from '../lib/photoAlt';
+
+interface Props {
+  currentLocale?: Locale;
+}
+
+const { currentLocale: currentLocaleProp } = Astro.props;
+const currentLocale = (currentLocaleProp ?? Astro.currentLocale ?? defaultLocale) as Locale;
+const basePath =
+  import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+const normalizedPathname =
+  basePath && Astro.url.pathname.startsWith(basePath)
+    ? Astro.url.pathname.slice(basePath.length) || '/'
+    : Astro.url.pathname;
+const localePattern = new RegExp(`^/(${locales.join('|')})(?=/|$)`);
+const pathWithoutLocale = normalizedPathname.replace(localePattern, '') || '/';
+const pathParam = pathWithoutLocale === '/' ? undefined : pathWithoutLocale.replace(/^\/+/, '');
+const alternateLocale: Locale = currentLocale === 'de' ? 'en' : 'de';
+const alternateLocaleHref = getRelativeLocaleUrl(alternateLocale, pathParam);
+const homeContent = getStrings(currentLocale).home;
+const homeHref = getRelativeLocaleUrl(currentLocale);
+const galleryHref = getRelativeLocaleUrl(currentLocale, 'galerie');
+const sections = getHomeSections(homeContent);
+const sectionLinks = getNavLinks(sections, homeHref);
+const links = [{ label: homeContent.sectionGalleryLabel, href: galleryHref }, ...sectionLinks];
+
+const photoEntries = Object.entries(
+  import.meta.glob('../assets/photos/*.{avif,jpg,jpeg,png,webp}', { eager: true }),
+);
+type ImageModule = { src: string; width: number; height: number };
+const photos = photoEntries
+  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
+  .map(([path, module]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resolved = ((module as any)?.default ?? module) as ImageModule;
+    return {
+      image: resolved,
+      alt: getPhotoAlt(path, currentLocale, homeContent.galleryImageAltPrefix),
+    };
+  });
+---
+
+<Layout
+  content={{
+    title: `${homeContent.sectionGalleryLabel} | ${homeContent.metaTitle}`,
+    description: homeContent.metaDescription,
+  }}
+  currentLocale={currentLocale}
+>
+  <NavBar
+    links={links}
+    homeHref={homeHref}
+    alternateLocaleHref={alternateLocaleHref}
+    languageToggleLabel={homeContent.navLanguageToggleLabel}
+    languageToggleAria={homeContent.navLanguageToggleAria}
+  />
+  <section class="min-h-screen bg-[var(--color-shell)] text-[var(--color-ink)]">
+    <div class="mx-auto w-full max-w-none space-y-10 px-6 lg:px-12">
+      <p class="section-eyebrow">{homeContent.sectionGalleryLabel}</p>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          photos.map((photo) => (
+            <figure class="overflow-hidden rounded-3xl bg-white shadow-lg">
+              <img
+                src={photo.image.src}
+                width={photo.image.width}
+                height={photo.image.height}
+                alt={photo.alt}
+                loading="lazy"
+                class="h-full w-full object-cover"
+              />
+            </figure>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Layout>

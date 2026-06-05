@@ -1,0 +1,117 @@
+---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import { defaultLocale, locales, type Locale } from '../i18n';
+import { getAbsoluteLocaleUrl } from 'astro:i18n';
+import socialImage from '../assets/photos/01-exterior-hero.png';
+
+interface Props {
+  content: {
+    title: string;
+    description?: string;
+  };
+  currentLocale?: Locale;
+}
+
+const { content, currentLocale: currentLocaleProp } = Astro.props;
+
+const currentLocale = (currentLocaleProp ?? Astro.currentLocale ?? defaultLocale) as Locale;
+const basePath =
+  import.meta.env.BASE_URL === '/'
+    ? ''
+    : import.meta.env.BASE_URL.replace(/\/$/, '');
+const normalizedPathname =
+  basePath && Astro.url.pathname.startsWith(basePath)
+    ? Astro.url.pathname.slice(basePath.length) || '/'
+    : Astro.url.pathname;
+const localePattern = new RegExp(`^/(${locales.join('|')})(?=/|$)`);
+const pathWithoutLocale = normalizedPathname.replace(localePattern, '') || '/';
+const pathParam =
+  pathWithoutLocale === '/' ? undefined : pathWithoutLocale.replace(/^\/+/, '');
+const canonicalUrl = getAbsoluteLocaleUrl(currentLocale, pathParam);
+const xDefaultUrl = getAbsoluteLocaleUrl(defaultLocale, pathParam);
+const baseUrl = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const alternateUrls = locales.map((locale) => ({
+  locale,
+  href: getAbsoluteLocaleUrl(locale, pathParam),
+}));
+const fallbackDescription =
+  currentLocale === 'de'
+    ? 'Familienfreundliches Cape-Cod-Strandhaus nahe am Strand.'
+    : 'Family-friendly Cape Cod beach house vacation rental near the beach.';
+const pageDescription = content.description || fallbackDescription;
+const ogImageUrl = new URL(socialImage.src, canonicalUrl).href;
+const socialImageAlt =
+  currentLocale === 'de'
+    ? 'Cape-Cod-Strandhaus mit Poolterrasse und Blick aufs Wasser'
+    : 'Cape Cod beach house vacation rental with pool terrace and waterfront views';
+const amenityFeatures =
+  currentLocale === 'de'
+    ? [
+        { '@type': 'LocationFeatureSpecification', name: 'Nahe [ADD BEACH NAME IF RELEVANT]', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Familienfreundliches Strandhaus', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Pool und Jacuzzi', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Terrasse und Grill', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Highspeed-WLAN', value: true },
+      ]
+    : [
+        { '@type': 'LocationFeatureSpecification', name: 'Near [ADD BEACH NAME IF RELEVANT]', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Family-friendly beach house', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Pool and Jacuzzi', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'Outdoor deck and grill', value: true },
+        { '@type': 'LocationFeatureSpecification', name: 'High-speed Wi-Fi', value: true },
+      ];
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'VacationRental',
+  name: content.title,
+  description: pageDescription,
+  url: canonicalUrl,
+  image: [ogImageUrl],
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: '[ADD TOWN / AREA]',
+    addressRegion: '[ADD STATE]',
+    addressCountry: 'US',
+  },
+  amenityFeature: amenityFeatures,
+};
+const structuredDataJson = JSON.stringify(structuredData).replace(/</g, '\\u003c');
+---
+
+<!DOCTYPE html>
+<html lang={currentLocale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={pageDescription} />
+    <meta property="og:title" content={content.title} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="Cape Cod Beach House" />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={socialImageAlt} />
+    <meta property="og:locale" content={currentLocale === 'de' ? 'de_DE' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={content.title} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={socialImageAlt} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={`${baseUrl}favicon.svg`} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonicalUrl} />
+    {alternateUrls.map((item) => (
+      <link rel="alternate" hreflang={item.locale} href={item.href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={xDefaultUrl} />
+    <script is:inline type="application/ld+json" set:html={structuredDataJson} />
+    <title>{content.title}</title>
+  </head>
+  <body>
+    <slot />
+    <Footer />
+  </body>
+</html>

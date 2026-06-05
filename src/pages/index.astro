@@ -1,0 +1,8 @@
+---
+import { defaultLocale, type Locale } from '../i18n';
+import HomeTemplate from '../pages-templates/Home.astro';
+
+const currentLocale = (Astro.currentLocale ?? defaultLocale) as Locale;
+---
+
+<HomeTemplate currentLocale={currentLocale} />
